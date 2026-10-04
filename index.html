@@ -200,7 +200,3 @@
 </body>
 </html>
 ```
-### 💡 Why it was blank earlier & How this fixes it:
-1. **API CORS Restrictions:** Some strict APIs reject direct requests from GitHub Pages domains. This version uses **`open.er-api.com`**, which natively permits cross-origin requests.
-2. **Built-in Offline Fallbacks:** If network requests are blocked by browser extensions or firewalls, the script instantly calculates values using built-in standard rates so the widget **never renders a blank screen**.
-3. **Self-Contained Structure:** All CSS and JavaScript are completely inline within the single file.
