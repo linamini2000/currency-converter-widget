@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff !important;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* Prevent iframe scrollbars */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .serif-font {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Scalable container that adapts fluidly to Notion embed dimensions */
+        .scaler-wrapper {
+            width: 100%;
+            max-width: 420px;
+            padding: 16px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .widget-card {
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 1.25rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border: 1px solid #f3f3f3;
+            max-height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .widget-body {
+            padding: 1.25rem;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        @media (max-height: 600px) {
+            .widget-body {
+                padding: 0.85rem;
+                space-y: 0.75rem !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scaler-wrapper">
+        <div class="widget-card">
+            
+            <!-- Header Banner -->
+            <div class="bg-[#38332e] text-white text-center py-4 px-6 shrink-0">
+                <h1 class="serif-font text-xl sm:text-2xl font-bold tracking-wide">Currency Converter</h1>
+            </div>
+
+            <!-- Widget Body -->
+            <div class="widget-body space-y-4">
+
+                <!-- Amount Input -->
+                <div class="space-y-1">
+                    <label for="amount" class="block serif-font font-bold text-gray-900 text-sm sm:text-base">Amount</label>
+                    <input type="number" id="amount" value="1" step="any"
+                        class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#38332e] focus:border-transparent transition">
+                </div>
+
+                <!-- From Currency -->
+                <div class="space-y-1">
+                    <label for="fromCurrency" class="block serif-font font-bold text-gray-900 text-sm sm:text-base">From Currency</label>
+                    <div class="relative">
+                        <select id="fromCurrency"
+                            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 text-sm sm:text-base appearance-none focus:outline-none focus:ring-2 focus:ring-[#38332e] focus:border-transparent transition cursor-pointer">
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-700">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- To Currency -->
+                <div class="space-y-1">
+                    <label for="toCurrency" class="block serif-font font-bold text-gray-900 text-sm sm:text-base">To Currency</label>
+                    <div class="relative">
+                        <select id="toCurrency"
+                            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 text-sm sm:text-base appearance-none focus:outline-none focus:ring-2 focus:ring-[#38332e] focus:border-transparent transition cursor-pointer">
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-700">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Swap Button -->
+                <button id="swapBtn"
+                    class="w-full py-2.5 px-4 bg-[#f7f7f6] hover:bg-[#efefed] text-gray-900 serif-font font-bold rounded-xl transition flex items-center justify-center space-x-2 shadow-sm cursor-pointer border border-gray-100 text-sm sm:text-base">
+                    <span>↕</span>
+                    <span>Swap Currencies</span>
+                </button>
+
+                <!-- Result Box -->
+                <div id="resultBox" class="bg-[#fafafa] border border-gray-100 rounded-2xl p-4 text-center space-y-1.5">
+                    <div id="rateText" class="text-[11px] sm:text-xs text-gray-500 font-medium">Loading exchange rate...</div>
+                    <div id="convertedAmount" class="serif-font text-xl sm:text-2xl font-bold text-gray-900">...</div>
+                    <div id="timestamp" class="text-[9px] sm:text-[10px] text-gray-400">Fetching live rates...</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const currencyNames = {
+            USD: "US Dollar", EUR: "Euro", GBP: "British Pound", CAD: "Canadian Dollar",
+            AUD: "Australian Dollar", JPY: "Japanese Yen", CHF: "Swiss Franc", CNY: "Chinese Yuan",
+            INR: "Indian Rupee", NZD: "New Zealand Dollar", SGD: "Singapore Dollar", HKD: "Hong Kong Dollar",
+            KRW: "South Korean Won", MXN: "Mexican Peso", BRL: "Brazilian Real", ZAR: "South African Rand",
+            SEK: "Swedish Krona", NOK: "Norwegian Krone", DKK: "Danish Krone", PLN: "Polish Zloty"
+        };
+
+        const fallbackRates = {
+            USD: 1.0, EUR: 0.92, GBP: 0.79, CAD: 1.35, AUD: 1.52,
+            JPY: 151.5, CHF: 0.90, CNY: 7.23, INR: 83.3, NZD: 1.65,
+            SGD: 1.34, HKD: 7.82, KRW: 1350.0, MXN: 16.8, BRL: 5.05,
+            ZAR: 18.5, SEK: 10.7, NOK: 10.8, DKK: 6.88, PLN: 4.01
+        };
+
+        let currentRates = {};
+        let lastUpdatedStr = "";
+
+        const amountInput = document.getElementById('amount');
+        const fromSelect = document.getElementById('fromCurrency');
+        const toSelect = document.getElementById('toCurrency');
+        const swapBtn = document.getElementById('swapBtn');
+        const rateText = document.getElementById('rateText');
+        const convertedAmountEl = document.getElementById('convertedAmount');
+        const timestampEl = document.getElementById('timestamp');
+
+        function populateDropdowns() {
+            const currencies = Object.keys(currencyNames).sort();
+            currencies.forEach(code => {
+                const opt1 = document.createElement('option');
+                opt1.value = code;
+                opt1.text = `${code} - ${currencyNames[code]}`;
+                fromSelect.appendChild(opt1);
+
+                const opt2 = document.createElement('option');
+                opt2.value = code;
+                opt2.text = `${code} - ${currencyNames[code]}`;
+                toSelect.appendChild(opt2);
+            });
+
+            fromSelect.value = "EUR";
+            toSelect.value = "CAD";
+        }
+
+        async function updateExchangeRates() {
+            const base = fromSelect.value;
+            try {
+                const response = await fetch(`https://open.er-api.com/v6/latest/${base}`);
+                if (!response.ok) throw new Error('API request failed');
+                const data = await response.json();
+                
+                if (data && data.rates) {
+                    currentRates = data.rates;
+                    lastUpdatedStr = data.time_last_update_utc ? data.time_last_update_utc.replace(' +0000', ' UTC') : new Date().toUTCString();
+                } else {
+                    throw new Error('Invalid data structure');
+                }
+            } catch (error) {
+                const baseToUSD = 1 / (fallbackRates[base] || 1);
+                currentRates = {};
+                for (const [curr, rateAgainstUSD] of Object.entries(fallbackRates)) {
+                    currentRates[curr] = rateAgainstUSD * baseToUSD;
+                }
+                lastUpdatedStr = "Cached Rate (Offline Mode)";
+            }
+            calculateConversion();
+        }
+
+        function calculateConversion() {
+            const amount = parseFloat(amountInput.value);
+            const from = fromSelect.value;
+            const to = toSelect.value;
+
+            if (isNaN(amount)) {
+                convertedAmountEl.textContent = `0.00 ${to}`;
+                return;
+            }
+
+            let rate = currentRates[to] || 1.0;
+            const result = amount * rate;
+
+            rateText.textContent = `1 ${from} = ${rate.toFixed(4)} ${to}`;
+            convertedAmountEl.textContent = `${result.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${to}`;
+            timestampEl.textContent = `Last updated: ${lastUpdatedStr}`;
+        }
+
+        fromSelect.addEventListener('change', updateExchangeRates);
+        toSelect.addEventListener('change', calculateConversion);
+        amountInput.addEventListener('input', calculateConversion);
+
+        swapBtn.addEventListener('click', () => {
+            const temp = fromSelect.value;
+            fromSelect.value = toSelect.value;
+            toSelect.value = temp;
+            updateExchangeRates();
+        });
+
+        window.onload = () => {
+            populateDropdowns();
+            updateExchangeRates();
+        };
+    </script>
+</body>
+</html>
